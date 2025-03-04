@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Panel</title>
+</head>
+<body>
+  <h1>Add New Product</h1>
+  <input type="text" id="name" placeholder="Product Name">
+  <input type="number" id="price" placeholder="Price">
+  <input type="text" id="image" placeholder="Image URL">
+  <button onclick="addProduct()">Add Product</button>
+
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
+  <script>
+    // Initialize Firebase with your config
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    function addProduct() {
+      const name = document.getElementById("name").value;
+      const price = document.getElementById("price").value;
+      const image = document.getElementById("image").value;
+
+      db.collection("products").add({
+        name: name,
+        price: price,
+        image: image
+      }).then(() => alert("Product added!"));
+    }
+  </script>
+</body>
+</html>

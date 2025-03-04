@@ -1,0 +1,25 @@
+// Load Razorpay script
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+// Razorpay Payment Function
+function checkout() {
+  const options = {
+    key: "YOUR_RAZORPAY_KEY", // From Razorpay Dashboard
+    amount: total * 100, // Total in paise (e.g., ₹100 = 10000 paise)
+    currency: "INR",
+    name: "Arab Products India",
+    description: "Payment for Order",
+    handler: function(response) {
+      alert("Payment successful! Order ID: " + response.razorpay_payment_id);
+      // Save order to Firebase
+      db.collection("orders").add({
+        products: cart,
+        customerName: document.getElementById("name").value,
+        address: document.getElementById("address").value,
+        paymentId: response.razorpay_payment_id
+      });
+    }
+  };
+  const rzp = new Razorpay(options);
+  rzp.open();
+}
