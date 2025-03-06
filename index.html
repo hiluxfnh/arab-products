@@ -1,17 +1,105 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Arab Products India</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="styles.css">
+  <title>The Arab Home India</title>
 </head>
-<body>
-  <h1>Authentic Arab Products 🇦🇪</h1>
-  <button id="google-signin">Sign In with Google</button>
-  <div id="products" style="display:none;"></div> <!-- Hide products until signed in -->
+<body class="bg-gray-100">
+  <!-- Header -->
+  <header class="bg-white shadow-md">
+    <nav class="container mx-auto p-4 flex justify-between items-center">
+      <a href="index.html" class="text-2xl font-bold text-orange-600">بيت العرب في الهند | The Arab Home in India</a>
+      <div class="flex items-center gap-6">
+        <a href="cart.html" class="flex items-center text-gray-700 hover:text-orange-600">
+          <i class="fas fa-shopping-cart mr-1"></i>
+          <span id="cartCount" class="bg-orange-100 px-2 rounded-full">0</span>
+        </a>
+        <a href="user.html" class="text-gray-700 hover:text-orange-600"><i class="fas fa-user"></i></a>
+        <button id="google-signin" class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700">
+          <i class="fab fa-google mr-2"></i>Sign In
+        </button>
+        <button id="signout" class="hidden bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700">
+          Sign Out
+        </button>
+      </div>
+    </nav>
+    <div id="welcomeMessage" class="hidden text-center text-gray-700 font-medium pb-4"></div>
+  </header>
 
-  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
-  <script src="scripts.js"></script>
+  <!-- Hero Section -->
+  <section class="bg-gray-50 py-16">
+    <div class="container mx-auto px-4 text-center">
+      <div class="max-w-2xl mx-auto mb-12">
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
+          Authentic Arabic Products in India
+        </h2>
+        <p class="text-gray-600 text-lg md:text-xl">
+          Bringing the flavors of Arabia to your doorstep - Premium dates, coffee, spices & more
+        </p>
+      </div>
+
+      <!-- Product Preview Grid -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+        <div class="bg-white p-4 rounded-lg shadow-sm">
+          <img src="images/Lebanese-Coffee.jpg" 
+               alt="Arabic Coffee" 
+               class="w-full h-32 object-cover rounded-md mb-2">
+          <p class="font-medium text-gray-800">قهوة عربية | Coffee</p>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow-sm">
+          <img src="images/dates.webp" 
+               alt="Arabic Dates" 
+               class="w-full h-32 object-cover rounded-md mb-2">
+          <p class="font-medium text-gray-800">تمور عربية | Dates</p>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow-sm">
+          <img src="images/spices.webp" 
+               alt="Arabic Spices" 
+               class="w-full h-32 object-cover rounded-md mb-2">
+          <p class="font-medium text-gray-800">بهارات عربية | Spices</p>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow-sm">
+          <img src="images/mategourdcalabaza.webp" 
+               alt="Mate Gourds" 
+               class="w-full h-32 object-cover rounded-md mb-2">
+          <p class="font-medium text-gray-800">قَرْع المُتّة | Mate</p>
+        </div>
+      </div>
+
+      <!-- Call to Action -->
+      <div class="mt-12">
+        <a href="#products" 
+           class="inline-block bg-orange-600 hover:bg-orange-700 text-white px-8 py-3 rounded-lg text-lg transition-colors">
+          Explore Products
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <main class="container mx-auto p-4 mt-8">
+    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6" id="products">
+      <!-- Products will load here -->
+    </div>
+  </main>
+
+<!-- Footer with Admin Button -->
+<footer class="bg-orange-600 text-white mt-12">
+    <div class="container mx-auto p-6 flex flex-col md:flex-row justify-between items-center gap-4">
+      <div class="text-center md:text-left">
+        <p class="text-sm">&copy; 2024 The Arab Home India. All rights reserved.</p>
+      </div>
+      <!-- Admin Button (always visible) -->
+      <a href="#" id="adminButton" class="bg-white text-orange-600 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors">
+        <i class="fas fa-lock mr-2"></i>Admin Panel
+      </a>
+    </div>
+  </footer>
+
+  <script type="module" src="scripts/scripts.js"></script>
 </body>
 </html>

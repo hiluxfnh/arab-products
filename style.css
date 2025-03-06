@@ -1,2 +1,150 @@
-body { font-family: Arial; padding: 20px; }
-.product { border: 1px solid #ddd; padding: 10px; margin: 10px; }
+/* Add this at the top */
+html, body {
+    height: 100%;
+  }
+  
+  body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  
+  main {
+    flex: 1;
+  }
+  
+  /* Hero Section Animations - Fixed Version */
+  @keyframes fade-in-up {
+    0% { 
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    100% { 
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .animate-fade-in-up {
+    animation: fade-in-up 1s ease-out forwards;
+  }
+  
+  @keyframes carousel {
+    0% { opacity: 0; z-index: 1; }
+    5% { opacity: 1; z-index: 2; }
+    30% { opacity: 1; z-index: 2; }
+    35% { opacity: 0; z-index: 1; }
+    100% { opacity: 0; z-index: 1; }
+  }
+  
+  .hero-carousel {
+    position: relative;
+    height: 500px; /* Fixed height */
+  }
+  
+  .hero-carousel > div {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    animation: carousel 30s infinite;
+    opacity: 0;
+  }
+  
+  .hero-carousel > div:nth-child(1) { animation-delay: 0s; }
+  .hero-carousel > div:nth-child(2) { animation-delay: 10s; }
+  .hero-carousel > div:nth-child(3) { animation-delay: 20s; }
+  
+  /* Footer Fix */
+  footer {
+    position: relative;
+    z-index: 100;
+    margin-top: auto; /* Pushes footer to bottom */
+    background: #fff;
+    padding: 2rem;
+  }
+  
+  #adminButton {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    z-index: 1000;
+  }
+  
+  #adminButton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+  }
+  
+  /* Mobile Optimization */
+  @media (max-width: 768px) {
+    .hero-carousel {
+      height: 300px; /* Smaller fixed height */
+    }
+    
+    .hero-carousel > div:not(:first-child) {
+      display: none;
+    }
+    
+    .hero-carousel img {
+      animation: none !important;
+      opacity: 1 !important;
+    }
+  }
+  
+  /* Add this for product grid stability */
+  .product-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+  
+  .product-card {
+    transition: transform 0.2s ease;
+    will-change: transform; /* Prevents layout shifts */
+  }
+  
+  .product-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    aspect-ratio: 1/1;
+  }
+
+  /* Custom Styles */
+@layer components {
+    .product-card {
+      transition: transform 0.2s ease-in-out;
+    }
+    .product-card:hover {
+      transform: translateY(-5px);
+    }
+  }
+  
+  /* Loading Spinner */
+  .fa-spinner {
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  /* Error Messages */
+  .error-message {
+    @apply text-red-500 bg-red-100 p-4 rounded-lg;
+  }
+  
+  /* Admin Button Pulse */
+  .admin-pulse {
+    animation: pulse 2s infinite;
+  }
+  
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
