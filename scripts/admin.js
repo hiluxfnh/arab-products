@@ -1,16 +1,18 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
 import { 
-  getAuth,
-  onAuthStateChanged,
-  signOut
+  getAuth, 
+  signInWithPopup, 
+  GoogleAuthProvider, 
+  onAuthStateChanged, 
+  signOut 
 } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
 import { 
-  getFirestore,
-  collection,
-  addDoc,
-  getDocs,
-  doc,
-  deleteDoc
+  getFirestore, 
+  collection, 
+  getDocs, 
+  doc, 
+  setDoc,
+  getDoc
 } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 
 const firebaseConfig = {
