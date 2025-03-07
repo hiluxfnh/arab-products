@@ -12,7 +12,8 @@ import {
   getDocs, 
   doc, 
   setDoc,
-  getDoc
+  getDoc,
+  Timestamp
 } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -68,9 +69,9 @@ document.addEventListener('DOMContentLoaded', () => {
           name: user.displayName,
           email: user.email,
           photoURL: user.photoURL,
-          createdAt: new Date(),
-          lastLogin: new Date(),
-          role: "user" // Default role
+          createdAt: Timestamp.now(),
+          lastLogin: Timestamp.now(),
+          role: "user"
         }, { merge: true });
 
         alert("Welcome back, " + user.displayName + "!");
@@ -133,17 +134,36 @@ async function loadProducts() {
     
     querySnapshot.forEach(doc => {
       const product = doc.data();
+      const orderDeadline = product.lastOrderDate?.toDate().toLocaleDateString();
+      
       productsContainer.innerHTML += `
         <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-          <img src="${product.image}" 
-               class="w-full h-48 object-cover"
-               alt="${product.name}"
-               onerror="this.src='https://via.placeholder.com/300'">
+          <div class="relative">
+            <img src="${product.image}" 
+                 class="w-full h-48 object-cover"
+                 alt="${product.name}"
+                 onerror="this.src='https://via.placeholder.com/300'">
+            ${orderDeadline ? `
+              <div class="absolute top-2 right-2 bg-orange-600 text-white px-3 py-1 rounded-full text-xs">
+                Order by: ${orderDeadline}
+              </div>
+            ` : ''}
+          </div>
           <div class="p-4">
             <h3 class="font-bold text-lg mb-2">${product.name}</h3>
             <p class="text-gray-600 text-sm mb-4">${product.description || ''}</p>
+            
             <div class="flex justify-between items-center">
-              <p class="text-orange-600 font-bold">₹${product.price}</p>
+              <div>
+                ${product.discountPrice ? `
+                  <div class="flex items-center gap-2">
+                    <span class="text-gray-400 line-through">₹${product.originalPrice}</span>
+                    <span class="text-orange-600 font-bold text-lg">₹${product.discountPrice}</span>
+                  </div>
+                ` : `
+                  <span class="text-orange-600 font-bold text-lg">₹${product.originalPrice}</span>
+                `}
+              </div>
               <button onclick="addToCart('${doc.id}')" 
                       class="bg-orange-100 text-orange-600 px-4 py-2 rounded hover:bg-orange-200">
                 <i class="fas fa-cart-plus mr-2"></i>Add
@@ -167,8 +187,19 @@ window.addToCart = function(productId) {
     return;
   }
 
-  let cart = JSON.parse(localStorage.getItem("cart") || []);
-  cart.push(productId);
+  let cart = JSON.parse(localStorage.getItem("cart") || "[]");
+  const existingItem = cart.find(item => item.id === productId);
+  
+  if (existingItem) {
+    existingItem.quantity += 1;
+  } else {
+    cart.push({
+      id: productId,
+      quantity: 1,
+      addedAt: new Date().toISOString()
+    });
+  }
+  
   localStorage.setItem("cart", JSON.stringify(cart));
   updateCartCount();
   alert("Added to cart!");

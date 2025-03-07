@@ -13,6 +13,47 @@ html, body {
     flex: 1;
   }
   
+  /* Product Card Updates */
+  .product-card {
+    transition: all 0.3s ease;
+    position: relative;
+  }
+  
+  .product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  }
+  
+  .price-display {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  
+  .original-price {
+    text-decoration: line-through;
+    color: #6b7280;
+    font-size: 0.9em;
+  }
+  
+  .discount-price {
+    color: #ea580c;
+    font-weight: 700;
+    font-size: 1.25em;
+  }
+  
+  .order-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: rgba(234, 88, 12, 0.9);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    backdrop-filter: blur(4px);
+  }
+  
   /* Hero Section Animations - Fixed Version */
   @keyframes fade-in-up {
     0% { 
@@ -93,18 +134,20 @@ html, body {
       animation: none !important;
       opacity: 1 !important;
     }
+  
+    .order-badge {
+      font-size: 0.65rem;
+      padding: 0.15rem 0.5rem;
+      top: 0.5rem;
+      right: 0.5rem;
+    }
   }
   
-  /* Add this for product grid stability */
+  /* Product Grid */
   .product-grid {
     display: grid;
     gap: 1.5rem;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  }
-  
-  .product-card {
-    transition: transform 0.2s ease;
-    will-change: transform; /* Prevents layout shifts */
   }
   
   .product-card img {
@@ -112,16 +155,7 @@ html, body {
     height: 200px;
     object-fit: cover;
     aspect-ratio: 1/1;
-  }
-
-  /* Custom Styles */
-@layer components {
-    .product-card {
-      transition: transform 0.2s ease-in-out;
-    }
-    .product-card:hover {
-      transform: translateY(-5px);
-    }
+    border-radius: 0.5rem 0.5rem 0 0;
   }
   
   /* Loading Spinner */
@@ -136,7 +170,11 @@ html, body {
   
   /* Error Messages */
   .error-message {
-    @apply text-red-500 bg-red-100 p-4 rounded-lg;
+    color: #ef4444;
+    background-color: #fef2f2;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin: 1rem 0;
   }
   
   /* Admin Button Pulse */
@@ -147,4 +185,22 @@ html, body {
   @keyframes pulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.5; }
+  }
+  
+  /* Additional Enhancements */
+  .product-description {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-height: 4.5em;
+  }
+  
+  .add-to-cart-btn {
+    transition: all 0.2s ease;
+  }
+  
+  .add-to-cart-btn:hover {
+    transform: scale(1.05);
   }

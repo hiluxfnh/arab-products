@@ -1,18 +1,21 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
 import { 
   getAuth, 
-  signInWithPopup, 
-  GoogleAuthProvider, 
   onAuthStateChanged, 
-  signOut 
+  signOut,
+  GoogleAuthProvider,
+  signInWithRedirect,
+  getRedirectResult
 } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js";
 import { 
-  getFirestore, 
-  collection, 
-  getDocs, 
-  doc, 
-  setDoc,
-  getDoc
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  doc,
+  deleteDoc,
+  getDoc,
+  setDoc
 } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -28,28 +31,151 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const provider = new GoogleAuthProvider();
 
-// Elements
+// Login elements
 const loading = document.getElementById('loading');
 const adminContent = document.getElementById('adminContent');
+const authContainer = document.createElement('div');
 
-// Enhanced Admin Check
-async function isAdmin(user) {
-  try {
-    const userDoc = await getDoc(doc(db, "users", user.uid));
-    return userDoc.exists() && userDoc.data().role === "admin";
-  } catch (error) {
-    console.error("Admin check failed:", error);
-    return false;
-  }
+// Create login UI
+function showLoginButton() {
+  authContainer.className = "min-h-screen flex items-center justify-center";
+  authContainer.innerHTML = `
+    <button id="loginBtn" class="bg-orange-600 text-white px-8 py-3 rounded-lg hover:bg-orange-700 text-lg">
+      <i class="fab fa-google mr-2"></i>Sign In with Google
+    </button>
+  `;
+  document.body.appendChild(authContainer);
+  
+  document.getElementById('loginBtn').addEventListener('click', async () => {
+    try {
+      await signInWithRedirect(auth, provider);
+    } catch (error) {
+      alert('Login error: ' + error.message);
+    }
+  });
 }
 
-// Load Admin Data
+// Check user authentication
+async function checkAuth() {
+  loading.classList.remove('hidden');
+  adminContent.classList.add('hidden');
+
+  try {
+    const result = await getRedirectResult(auth);
+    if (result?.user) {
+      await setDoc(doc(db, "users", result.user.uid), {
+        uid: result.user.uid,
+        email: result.user.email,
+        name: result.user.displayName,
+        role: "user",
+        lastLogin: new Date()
+      }, { merge: true });
+    }
+  } catch (error) {
+    alert('Authentication error: ' + error.message);
+  }
+
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      try {
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (userDoc.exists() && userDoc.data().role === "admin") {
+          loading.classList.add('hidden');
+          adminContent.classList.remove('hidden');
+          document.getElementById('adminEmail').textContent = user.email;
+          setupAdminPanel();
+        } else {
+          await signOut(auth);
+          alert('You are not an admin!');
+          showLoginButton();
+        }
+      } catch (error) {
+        alert('Error checking admin status: ' + error.message);
+        await signOut(auth);
+        showLoginButton();
+      }
+    } else {
+      loading.classList.add('hidden');
+      showLoginButton();
+    }
+  });
+}
+
+// Admin panel setup
+async function setupAdminPanel() {
+  // Load initial data
+  await loadAdminPanel();
+
+  // Sign out handler
+  document.getElementById('signout').addEventListener('click', async () => {
+    try {
+      await signOut(auth);
+      window.location.reload();
+    } catch (error) {
+      alert('Sign out error: ' + error.message);
+    }
+  });
+
+  // Product form handler
+  document.getElementById('addProductForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const imageFile = document.getElementById('productImage').files[0];
+
+    try {
+      if (!imageFile) throw new Error('Please select an image');
+      if (!['image/jpeg', 'image/png'].includes(imageFile.type)) {
+        throw new Error('Only JPG/PNG images allowed');
+      }
+
+      const reader = new FileReader();
+      reader.readAsDataURL(imageFile);
+      const base64Image = await new Promise((resolve, reject) => {
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+      });
+
+      if (base64Image.length > 700000) {
+        throw new Error('Image too large! Max 500KB');
+      }
+
+      await addDoc(collection(db, "products"), {
+        name: formData.get('name'),
+        originalPrice: Number(formData.get('originalPrice')),
+        discountPrice: formData.get('discountPrice') ? Number(formData.get('discountPrice')) : null,
+        lastOrderDate: new Date(formData.get('lastOrderDate')),
+        description: formData.get('description'),
+        image: base64Image,
+        createdAt: new Date()
+      });
+
+      alert('Product added successfully!');
+      e.target.reset();
+      await loadAdminPanel();
+    } catch (error) {
+      alert('Error adding product: ' + error.message);
+    }
+  });
+
+  // Image preview
+  document.getElementById('productImage').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    const preview = document.getElementById('imagePreview');
+    if (file) {
+      preview.classList.remove('hidden');
+      preview.querySelector('img').src = URL.createObjectURL(file);
+    }
+  });
+}
+
+// Load products and orders
 async function loadAdminPanel() {
   try {
-    // Load Orders
+    // Load orders
     const ordersSnapshot = await getDocs(collection(db, "orders"));
-    const ordersList = document.getElementById("ordersList");
+    const ordersList = document.getElementById('ordersList');
     ordersList.innerHTML = ordersSnapshot.docs.map(doc => `
       <div class="border rounded p-4 mb-4 bg-gray-50">
         <p class="font-bold text-orange-600">Order #${doc.id.slice(0,6)}</p>
@@ -59,104 +185,57 @@ async function loadAdminPanel() {
       </div>
     `).join('');
 
-    // Load Products
+    // Load products
     const productsSnapshot = await getDocs(collection(db, "products"));
-    const productsList = document.getElementById("adminProducts");
-    productsList.innerHTML = productsSnapshot.docs.map(doc => `
-      <div class="border rounded p-4 mb-4 bg-gray-50">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="font-bold">${doc.data().name}</p>
-            <p class="text-orange-600">₹${doc.data().price}</p>
+    const productsList = document.getElementById('adminProducts');
+    productsList.innerHTML = productsSnapshot.docs.map(doc => {
+      const product = doc.data();
+      return `
+        <div class="border rounded p-4 mb-4 bg-gray-50">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="font-bold">${product.name}</p>
+              ${product.discountPrice ? `
+                <div class="flex gap-2 items-center">
+                  <span class="text-gray-400 line-through">₹${product.originalPrice}</span>
+                  <span class="text-orange-600 font-bold">₹${product.discountPrice}</span>
+                </div>
+              ` : `
+                <span class="text-orange-600 font-bold">₹${product.originalPrice}</span>
+              `}
+              ${product.lastOrderDate ? `
+                <p class="text-sm mt-1 text-gray-500">
+                  Order by: ${product.lastOrderDate.toDate().toLocaleDateString()}
+                </p>
+              ` : ''}
+            </div>
+            <button onclick="deleteProduct('${doc.id}')" 
+                    class="text-red-500 hover:text-red-700">
+              <i class="fas fa-trash"></i>
+            </button>
           </div>
-          <button onclick="deleteProduct('${doc.id}')" 
-                  class="text-red-500 hover:text-red-700">
-            <i class="fas fa-trash"></i>
-          </button>
+          <img src="${product.image}" 
+               class="mt-2 w-full h-32 object-cover rounded"
+               alt="${product.name}">
         </div>
-        <img src="${doc.data().image}" 
-             class="mt-2 w-full h-32 object-cover rounded"
-             onerror="this.style.display='none'">
-      </div>
-    `).join('');
+      `;
+    }).join('');
   } catch (error) {
-    console.error("Failed to load admin data:", error);
-    alert("Error loading admin panel. Check console for details.");
+    alert('Error loading data: ' + error.message);
   }
 }
 
-// Initialize Admin Page
-document.addEventListener("DOMContentLoaded", () => {
-  if (!window.location.pathname.includes("admin.html")) return;
-
-  // Initial state
-  loading.classList.remove('hidden');
-  adminContent.classList.add('hidden');
-
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      window.location.href = "index.html";
-      return;
-    }
-
-    try {
-      const adminStatus = await isAdmin(user);
-      
-      if (adminStatus) {
-        // Show admin content
-        loading.classList.add('hidden');
-        adminContent.classList.remove('hidden');
-        document.getElementById("adminEmail").textContent = user.email;
-        
-        // Load data
-        await loadAdminPanel();
-
-        // Add product handler
-        document.getElementById("addProductForm").addEventListener("submit", async (e) => {
-          e.preventDefault();
-          const formData = new FormData(e.target);
-          
-          try {
-            await addDoc(collection(db, "products"), {
-              name: formData.get("name"),
-              price: Number(formData.get("price")),
-              image: formData.get("image"),
-              description: formData.get("description"),
-              createdAt: new Date()
-            });
-            alert("Product added successfully!");
-            e.target.reset();
-            await loadAdminPanel();
-          } catch (error) {
-            console.error("Product add failed:", error);
-            alert("Failed to add product. Check console.");
-          }
-        });
-
-        // Sign out handler
-        document.getElementById("signout").addEventListener("click", () => {
-          signOut(auth);
-        });
-      } else {
-        window.location.href = "index.html";
-      }
-    } catch (error) {
-      console.error("Authentication check failed:", error);
-      window.location.href = "index.html";
-    }
-  });
-});
-
-// Delete Product
+// Delete product function
 window.deleteProduct = async (productId) => {
-  if (!confirm("Are you sure you want to delete this product?")) return;
-  
+  if (!confirm('Are you sure you want to delete this product?')) return;
   try {
     await deleteDoc(doc(db, "products", productId));
     await loadAdminPanel();
-    alert("Product deleted successfully!");
+    alert('Product deleted successfully!');
   } catch (error) {
-    console.error("Delete failed:", error);
-    alert("Failed to delete product. Check console.");
+    alert('Delete failed: ' + error.message);
   }
 };
+
+// Start the application
+document.addEventListener('DOMContentLoaded', checkAuth);
