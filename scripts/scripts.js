@@ -33,8 +33,9 @@ const db = getFirestore(app);
 // Common Functions
 function updateCartCount() {
   const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+  const count = cart.reduce((total, item) => total + item.quantity, 0);
   document.querySelectorAll("#cartCount").forEach(el => {
-    el.textContent = cart.length;
+    el.textContent = count;
   });
 }
 
@@ -82,11 +83,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Sign Out
+  // Sign Out with Cart Clearing
   if(signOutButton) {
     signOutButton.addEventListener("click", () => {
-      signOut(auth);
-      alert("You've been signed out");
+      localStorage.removeItem("cart");
+      signOut(auth).then(() => {
+        alert("You've been signed out");
+        window.location.reload();
+      });
     });
   }
 
@@ -108,13 +112,22 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Auth State Listener
-  onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, async (user) => {
     if (user) {
       document.getElementById("google-signin").classList.add("hidden");
       document.getElementById("signout").classList.remove("hidden");
       document.getElementById("welcomeMessage").textContent = `Welcome, ${user.displayName || "User"}!`;
       document.getElementById("welcomeMessage").classList.remove("hidden");
+
+      // Show/hide admin button
+      const adminButton = document.getElementById("adminButton");
+      if (await isAdmin(user)) {
+        adminButton.classList.remove("hidden");
+      } else {
+        adminButton.classList.add("hidden");
+      }
     } else {
+      localStorage.removeItem("cart");
       document.getElementById("google-signin").classList.remove("hidden");
       document.getElementById("signout").classList.add("hidden");
       document.getElementById("welcomeMessage").classList.add("hidden");
